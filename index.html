@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Infos navigateur avancées</title>
+</head>
+<body>
+  <button id="sendInfoBtn">Clique pour envoyer vos infos</button>
+
+  <script>
+    const webhookURL = "TON_WEBHOOK_ICI";
+
+    async function getBrowserInfo() {
+      const navigatorInfo = {
+        userAgent: navigator.userAgent,
+        platform: navigator.platform,
+        languages: navigator.languages,
+        language: navigator.language,
+        doNotTrack: navigator.doNotTrack,
+        cookieEnabled: navigator.cookieEnabled,
+        javaEnabled: navigator.javaEnabled(),
+        hardwareConcurrency: navigator.hardwareConcurrency,
+        deviceMemory: navigator.deviceMemory,
+        webdriver: navigator.webdriver || false,
+        product: navigator.product,
+        plugins: Array.from(navigator.plugins).map(p => p.name),
+      };
+
+      const screenInfo = {
+        width: screen.width,
+        height: screen.height,
+        colorDepth: screen.colorDepth,
+        orientation: screen.orientation ? screen.orientation.type : "N/A",
+        viewport: `${window.innerWidth}x${window.innerHeight}`,
+        devicePixelRatio: window.devicePixelRatio,
+      };
+
+      const dateTime = {
+        systemTime: new Date().toString(),
+        localTime: new Date().toLocaleString(),
+      };
+
+      const storageInfo = {};
+      if (navigator.storage && navigator.storage.estimate) {
+        const estimate = await navigator.storage.estimate();
+        storageInfo.quota = estimate.quota;
+        storageInfo.usage = estimate.usage;
+      }
+
+      const capabilities = {
+        serviceWorker: !!navigator.serviceWorker,
+        credentials: !!navigator.credentials,
+        mediaDevices: !!navigator.mediaDevices,
+        mediaSession: !!navigator.mediaSession,
+        wakeLock: !!navigator.wakeLock,
+        locks: !!navigator.locks,
+        getGamepads: !!navigator.getGamepads,
+        requestMIDIAccess: !!navigator.requestMIDIAccess,
+        clipboard: !!navigator.clipboard,
+      };
+
+      const connectionInfo = navigator.connection ? {
+        effectiveType: navigator.connection.effectiveType,
+        downlink: navigator.connection.downlink,
+        rtt: navigator.connection.rtt,
+        saveData: navigator.connection.saveData
+      } : {};
+
+      let geoInfo = {};
+      if ("geolocation" in navigator) {
+        try {
+          geoInfo = await new Promise((resolve) => {
+            navigator.geolocation.getCurrentPosition(
+              pos => resolve({ latitude: pos.coords.latitude, longitude: pos.coords.longitude }),
+              err => resolve({ error: err.message }),
+              { timeout: 5000 }
+            );
+          });
+        } catch(e) { geoInfo = { error: e.message }; }
+      }
+
+      // IP publique
+      let ip = {};
+      try {
+        const ipRes = await fetch("https://api.ipify.org?format=json");
+        ip = await ipRes.json();
+      } catch(e) { ip = { error: e.message }; }
+
+      // WebRTC support
+      const webrtc = {
+        RTCPeerConnection: !!window.RTCPeerConnection,
+        RTCDataChannel: !!window.RTCDataChannel
+      };
+
+      return {
+        navigatorInfo,
+        screenInfo,
+        dateTime,
+        storageInfo,
+        capabilities,
+        connectionInfo,
+        geoInfo,
+        ip,
+        webrtc
+      };
+    }
+
+    async function sendBrowserInfo() {
+      const consent = confirm("Voulez-vous partager vos informations de navigateur avec le serveur ?");
+      if (!consent) return;
+
+      const info = await getBrowserInfo();
+
+      await fetch(webhookURL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          content: "Voici les infos du navigateur :",
+          embeds: [{ title: "Infos navigateur", description: "```json\n" + JSON.stringify(info, null, 2) + "\n```" }]
+        })
+      });
+
+      alert("Infos envoyées !");
+    }
+
+    document.getElementById("sendInfoBtn").addEventListener("click", sendBrowserInfo);
+  </script>
+</body>
+</html>
